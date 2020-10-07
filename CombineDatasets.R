@@ -32,9 +32,5 @@ jsFiltered <- Jordan_Secchi_Combined %>%
          sddunits = `ResultMeasure/MeasureUnitCode`,
          source = ProviderName) 
 View(jsFiltered)
-##.... Keep going to include the rest of the variables you want!
-
-
-
 
 
