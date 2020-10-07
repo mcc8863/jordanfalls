@@ -19,6 +19,15 @@ Jordan_Secchi_Combined <- rbind(Jordan_Secchi_NWIS, Jordan_Secchi_STORET)
 Jordan_Secchi_Combined <- Jordan_Secchi_Combined %>%
   arrange(`SampleCollectionMethod/MethodName`, MonitoringLocationIdentifier, ActivityStartDate)
 
+##Add latitude and longitude for each locationID
+Jordan_LatLong <- read_csv('Jordan In Situ LatLong.csv')
+glimpse(Jordan_LatLong)
+
+##I want to match the MonitoringLocationIdentifier names from the LatLong
+##dataset and the combined dataset to line up the correct lats and longs.
+
+
+
 ## I would suggest as a next step you get rid of variables you don't want
 ## In the code below the format is select(X = Y), X is your new name, Y is the old Name
 jsFiltered <- Jordan_Secchi_Combined %>%
