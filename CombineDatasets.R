@@ -23,23 +23,35 @@ Jordan_Secchi_Combined <- Jordan_Secchi_Combined %>%
 Jordan_LatLong <- read_csv('Jordan In Situ LatLong.csv')
 glimpse(Jordan_LatLong)
 
-##I want to match the MonitoringLocationIdentifier names from the LatLong
-##dataset and the combined dataset to line up the correct lats and longs.
+
+##Match the MonitoringLocationIdentifier names from the LatLong dataset and the combined dataset.
+LatLong_JL_Secchi <- merge(Jordan_Secchi_Combined, Jordan_LatLong, by='MonitoringLocationIdentifier')
+View(LatLong_JL_Secchi)
+
+
+##Add reflectance values
+Jordan_REFL <- read_csv('JordanLakeREFL2.csv')
+glimpse(Jordan_REFL)
+colnames(Jordan_REFL)
+
+##How do I match the MonitoringLocationIdentifier and the Date?
+totalJL_Secchi <- merge(LatLong_JL_Secchi, Jordan_REFL, by='MonitoringLocationIdentifier')
+##Error above: "Error in fix.by(by.y, y) : 'by' must specify a uniquely valid column"
 
 
 
-## I would suggest as a next step you get rid of variables you don't want
+## Get rid of variables you don't want
 ## In the code below the format is select(X = Y), X is your new name, Y is the old Name
-jsFiltered <- Jordan_Secchi_Combined %>%
-  select(method = `SampleCollectionMethod/MethodName`,
-         equipment = SampleCollectionEquipmentName,
-         date = ActivityStartDate, 
+jsFiltered <- totalJL_Secchi %>%
+  select(date = ActivityStartDate, 
          locationID = MonitoringLocationIdentifier,
+         latitude = LatitudeMeasure,
+         longitude = LongitudeMeasure,
+         method = `SampleCollectionMethod/MethodName`,
+         equipment = SampleCollectionEquipmentName,
          depth = `ActivityDepthHeightMeasure/MeasureValue`,
          depthunits = `ActivityDepthHeightMeasure/MeasureUnitCode`,
          secchidepth = ResultMeasureValue,
          sddunits = `ResultMeasure/MeasureUnitCode`,
          source = ProviderName) 
 View(jsFiltered)
-
-
