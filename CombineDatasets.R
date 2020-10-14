@@ -107,6 +107,22 @@ matchups <- same_day %>% mutate(MatchType = 'same day') %>%
 # It's good to get rid of intermediate variables to keep things clean
 rm(previous_day, same_day, following_day)
 
+## Challenge Next....Explore your data a little!  Here are a couple
+## suggestions at places to start
+
+#easy plots
+hist(matchups$secchidepth)
+hist(matchups$Red)
+
+## Using ggplots (very much worth learning)
+ggplot(matchups,aes(x = Red, y = secchidepth)) + geom_point() +
+  ylim(0,2) + # get rid on one outlier
+  geom_smooth(method = 'lm') +
+  ggpubr::stat_cor(label.y = 2) +
+  ggpubr::stat_regline_equation(label.y = 1.75)
+
+## Try some of your own!
+
 
 ##How do I match the MonitoringLocationIdentifier and the Date?
 totalJL_Secchi <- merge(LatLong_JL_Secchi, Jordan_REFL, by='MonitoringLocationIdentifier')
