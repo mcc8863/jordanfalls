@@ -34,19 +34,37 @@ Jordan_REFL <- read_csv('JordanLakeREFL2.csv')
 glimpse(Jordan_REFL)
 colnames(Jordan_REFL)
 
-##How do I match the MonitoringLocationIdentifier and the Date?
-totalJL_Secchi <- merge(LatLong_JL_Secchi, Jordan_REFL, by='MonitoringLocationIdentifier')
-##Error above: "Error in fix.by(by.y, y) : 'by' must specify a uniquely valid column"
+############### Simon's edits start here
+
+## Separate the date from the system index column
+
+## Here, str_split breaks the input value on the set pattern '_0000", then [[1]][1]
+# takes the first result of that.  The map functions just tell it go row by row and
+# repeat the same process.
+Jordan_REFL <- Jordan_REFL %>%
+  mutate(LandsatID = map_chr(`system:index`, ~str_split(.,'_0000')[[1]][1]),
+       date =  map_chr(LandsatID, ~tail(strsplit(., "_")[[1]], n =1)),
+       date = ymd(date)) %>%
+  select(-`system:index`)
+
+## Your Monitoring Location Identifier column is very weird, we'll rename it with a 
+## workaround (I feel like this happened before?)
+colnames(Jordan_REFL)[16] <-  'locationID'
 
 
+## Ok I moved this up a little to work with a cleaners data set.  I also don't have
+## the lat long csv you use so you'll want to swap that back in here and add the lat/long
+## columns back
 
 ## Get rid of variables you don't want
 ## In the code below the format is select(X = Y), X is your new name, Y is the old Name
-jsFiltered <- totalJL_Secchi %>%
+
+#jsFiltered <- totalJL_Secchi %>%
+jsFiltered <- Jordan_Secchi_Combined %>%  
   select(date = ActivityStartDate, 
          locationID = MonitoringLocationIdentifier,
-         latitude = LatitudeMeasure,
-         longitude = LongitudeMeasure,
+         #latitude = LatitudeMeasure,
+         #longitude = LongitudeMeasure,
          method = `SampleCollectionMethod/MethodName`,
          equipment = SampleCollectionEquipmentName,
          depth = `ActivityDepthHeightMeasure/MeasureValue`,
@@ -54,4 +72,43 @@ jsFiltered <- totalJL_Secchi %>%
          secchidepth = ResultMeasureValue,
          sddunits = `ResultMeasure/MeasureUnitCode`,
          source = ProviderName) 
+
 View(jsFiltered)
+
+## This is a clunky way to do it, but I think it's the easiest to understand
+## Let's assume you want +/- 1 day, that means it's a three day window you want to
+## match dates to, so we'll do it in three stemps
+
+#1) Same day matches (inner_join here means only take dates that exist in both
+# datasets) (Also, I don't have the lat long csv you use, so I'm just going to use 
+# Jordan_Secchi_Combined, you might want to swap this for your LatLog_JL_Secchi)
+
+## First we need the date formats to be the same
+jsFiltered <- jsFiltered %>%
+  mutate(date = ymd(date))
+
+same_day <- Jordan_REFL %>%
+  inner_join(jsFiltered)
+
+# Sample taken previous day
+previous_day <- Jordan_REFL %>%
+  inner_join(jsFiltered %>% mutate(date = date + 1))
+
+# Sample taken following day
+following_day <- Jordan_REFL %>%
+  inner_join(jsFiltered %>% mutate(date = date - 1))
+
+## Combine them all together
+matchups <- same_day %>% mutate(MatchType = 'same day') %>%
+  bind_rows(previous_day %>% mutate(MatchType = 'previous day')) %>%
+  bind_rows(following_day %>% mutate(MatchType = 'following day'))
+
+## You have 201 +/- 1 day matchups!
+# It's good to get rid of intermediate variables to keep things clean
+rm(previous_day, same_day, following_day)
+
+
+##How do I match the MonitoringLocationIdentifier and the Date?
+totalJL_Secchi <- merge(LatLong_JL_Secchi, Jordan_REFL, by='MonitoringLocationIdentifier')
+##Error above: "Error in fix.by(by.y, y) : 'by' must specify a uniquely valid column"
+
