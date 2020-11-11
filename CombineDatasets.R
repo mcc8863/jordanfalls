@@ -63,7 +63,8 @@ colnames(Jordan_REFL)[16] <-  'locationID'
 ## In the code below the format is select(X = Y), X is your new name, Y is the old Name
 
 jsFiltered <- LatLong_JL_Secchi %>%
-  select(date = ActivityStartDate, 
+  select(date = ActivityStartDate,
+         time = `ActivityStartTime/Time`,
          locationID = MonitoringLocationIdentifier,
          latitude = LatitudeMeasure,
          longitude = LongitudeMeasure,
@@ -77,7 +78,8 @@ jsFiltered <- LatLong_JL_Secchi %>%
 
 View(jsFiltered)
 
-write.table(jsFiltered, file = "JLSDtotal.csv", sep = "\t")
+## Write csv does a better job maintaining column properties that write.table
+write_csv(jsFiltered, path = "JLSDtotal.csv")
 
 ## This is a clunky way to do it, but I think it's the easiest to understand
 ## Let's assume you want +/- 1 day, that means it's a three day window you want to
