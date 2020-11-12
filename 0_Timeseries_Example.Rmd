@@ -29,7 +29,7 @@ jsFiltered <- jsFiltered %>%
 ## For these examples I'm just going to filter out values that don't make sense (>5 meters), but ultimately you should take a look and see what's up with those.
 ## Also, since we have a bunch of sites, lets just take the average daily value
 
-jsFiltered <- jsFilterd %>% filter(secchidepth < 5) %>%
+jsFiltered <- jsFiltered %>% filter(secchidepth < 5) %>%
   group_by(date) %>%
   summarise(secchidepth = median(secchidepth)) %>%
   ungroup() %>%
@@ -52,19 +52,19 @@ jsFiltered %>%
   theme(legend.position = 'none')
 
 
-## look at if there's a seasonal signal
+## Group things by month to see if theres there's a seasonal signal
 jsFiltered %>%
   mutate(month = month(date, label = T)) %>%
   ggplot(aes(x = month, y = secchidepth)) +
   geom_boxplot()
-# Except for February it totally looks like there is
+# Except for February (which might be wonky due to few observations) it totally looks like there is
 
 
-### Total bonus, do a seasonal decomposition.  Here I use an approach called STL, Johnathon would give you big bonus points if you did a similar thing with Forier Transfroms.  Both do a similar thing where they extract the seasonal component and the overall trend
+### Total bonus, do a seasonal decomposition.  Here I use an approach called STL, Johnathon would give you big bonus points if you did a similar thing with a Fourier Transform.  Both do a similar thing where they extract the seasonal component and the overall trend, STL can just handle missing data whereas Fourier analysis doesn't (you'd have to impute the missing values)
 
 ## Also, take all this with a grain of salt, there's a lot of missing data here
 
-## First summarise everything to a monthly value
+## First summarize everything to a monthly value
 jsMonthly <- jsFiltered %>%
   mutate(year = year(date), month = month(date)) %>%
   group_by(year,month) %>%
@@ -77,15 +77,17 @@ full.ts <- expand.grid(year = seq(min(jsMonthly$year),max(jsMonthly$year),1),
   left_join(jsMonthly)
 
 ## This does the stl (more info at https://anomaly.io/seasonal-trend-decomposition-in-r/)
-stl <- :stlplus(full.ts$secchi, n.p = 12, s.window = 'periodic')
+stl <- stlplus(full.ts$secchi, n.p = 12, s.window = 'periodic')
 
-## Pull out the summary values from the resulting stl object
-ts.summary <- check$data %>% select(raw, seasonal, trend, remainder) %>%
-  mutate(timestep = row_number()) %>%
-  pivot_longer(-timestep, values_to = 'Secchi', names_to = 'Component')
-  
+## Pull out the summary values from the resulting stl object and join them with the actual dates to replace the temesteps
+ts.summary <- stl$data %>% select(raw, seasonal, trend, remainder) %>%
+  bind_cols(full.ts %>% select(year,month)) %>%
+  mutate(date = ymd(paste0(year,'-',month,'-01'))) %>%
+  select(-year, -month) %>%
+  pivot_longer(-date, values_to = 'Secchi', names_to = 'Component')
+
 ## Plot up the seasonal and trend parts.
-ggplot(ts.summary %>% filter(Component %in% c('trend', 'seasonal')), aes(x = timestep, y = Secchi)) +
+ggplot(ts.summary, aes(x = date, y = Secchi)) +
   geom_line() +
   facet_wrap(~Component, ncol = 1, scales = 'free')
 
