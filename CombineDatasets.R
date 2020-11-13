@@ -134,7 +134,7 @@ ggplot(matchups,aes(x = Red, y = secchidepth)) + geom_point() +
   ggpubr::stat_cor(label.y = 2) +
   ggpubr::stat_regline_equation(label.y = 1.75)
 
-write.table(matchups, file = "JLSDmatchups.csv", sep = "\t")
+write_csv(matchups, path = "JLSDmatchups.csv")
 
 
 ###############################################################
@@ -199,7 +199,8 @@ colnames(Jordan_REFL)[16] <-  'locationID'
 ## In the code below the format is select(X = Y), X is your new name, Y is the old Name
 
 jsFiltered <- LatLong_JL_ChlA %>%
-  select(date = ActivityStartDate, 
+  select(date = ActivityStartDate,
+         time = `ActivityStartTime/Time`,
          locationID = MonitoringLocationIdentifier,
          latitude = LatitudeMeasure,
          longitude = LongitudeMeasure,
@@ -213,7 +214,7 @@ jsFiltered <- LatLong_JL_ChlA %>%
 
 View(jsFiltered)
 
-write.table(jsFiltered, file = "JLChlAtotal.csv", sep = "\t")
+write_csv(jsFiltered, path = "JLChlAtotal.csv")
 
 ## This is a clunky way to do it, but I think it's the easiest to understand
 ## Let's assume you want +/- 1 day, that means it's a three day window you want to
@@ -247,5 +248,4 @@ matchups <- same_day %>% mutate(MatchType = 'same day') %>%
 # It's good to get rid of intermediate variables to keep things clean
 rm(previous_day, same_day, following_day)
 
-
-write.table(matchups, file = "JLChlAmatchups.csv", sep = "\t")
+write_csv(matchups, path = "JLChlAmatchups.csv")
