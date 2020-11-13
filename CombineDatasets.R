@@ -41,6 +41,11 @@ colnames(Jordan_REFL)
 
 ## Separate the date from the system index column
 
+##I want to attach the time column to the dataset, but the times were read in with an incorrect
+##date in front of them. I want to eliminate that date and just keep the time. I figure the code
+##will be similar to the next section of code.
+
+
 ## Here, str_split breaks the input value on the set pattern '_0000", then [[1]][1]
 # takes the first result of that.  The map functions just tell it go row by row and
 # repeat the same process.
@@ -64,6 +69,7 @@ colnames(Jordan_REFL)[16] <-  'locationID'
 
 jsFiltered <- LatLong_JL_Secchi %>%
   select(date = ActivityStartDate, 
+         time = `ActivityStartTime/Time`,
          locationID = MonitoringLocationIdentifier,
          latitude = LatitudeMeasure,
          longitude = LongitudeMeasure,
@@ -73,7 +79,12 @@ jsFiltered <- LatLong_JL_Secchi %>%
          depthunits = `ActivityDepthHeightMeasure/MeasureUnitCode`,
          secchidepth = ResultMeasureValue,
          sddunits = `ResultMeasure/MeasureUnitCode`,
-         source = ProviderName) 
+         source = ProviderName)
+
+##Change all values measured in inches to meters.
+jsFiltered$secchidepth[jsFiltered$sddunits=="in"] = jsFiltered$secchidepth[jsFiltered$sddunits=="in"]/39.37
+jsFiltered$sddunits[jsFiltered$sddunits=="in"] = "m"
+
 
 View(jsFiltered)
 
