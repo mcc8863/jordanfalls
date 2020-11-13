@@ -41,11 +41,6 @@ colnames(Jordan_REFL)
 
 ## Separate the date from the system index column
 
-##I want to attach the time column to the dataset, but the times were read in with an incorrect
-##date in front of them. I want to eliminate that date and just keep the time. I figure the code
-##will be similar to the next section of code.
-
-
 ## Here, str_split breaks the input value on the set pattern '_0000", then [[1]][1]
 # takes the first result of that.  The map functions just tell it go row by row and
 # repeat the same process.
@@ -68,7 +63,7 @@ colnames(Jordan_REFL)[16] <-  'locationID'
 ## In the code below the format is select(X = Y), X is your new name, Y is the old Name
 
 jsFiltered <- LatLong_JL_Secchi %>%
-  select(date = ActivityStartDate, 
+  select(date = ActivityStartDate,
          time = `ActivityStartTime/Time`,
          locationID = MonitoringLocationIdentifier,
          latitude = LatitudeMeasure,
@@ -88,7 +83,8 @@ jsFiltered$sddunits[jsFiltered$sddunits=="in"] = "m"
 
 View(jsFiltered)
 
-write.table(jsFiltered, file = "JLSDtotal.csv", sep = "\t")
+## Write csv does a better job maintaining column properties that write.table
+write_csv(jsFiltered, path = "JLSDtotal.csv")
 
 ## This is a clunky way to do it, but I think it's the easiest to understand
 ## Let's assume you want +/- 1 day, that means it's a three day window you want to
